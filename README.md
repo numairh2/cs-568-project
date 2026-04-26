@@ -60,6 +60,28 @@ The app opens in your browser. Use the sidebar to navigate between the four page
 
 The default LLM is `TinyLlama/TinyLlama-1.1B-Chat-v1.0`, which downloads from HuggingFace on first run and runs locally.
 
+## Research
+
+This is a CS 568 research project with a concrete research question, a
+pre-registered pilot study, and component-level evaluation of the
+classifier and the explainer.
+
+- [`RESEARCH.md`](RESEARCH.md) — research question, hypotheses, contribution.
+- [`RELATED_WORK.md`](RELATED_WORK.md) — positioning against legal NLP, readability, XAI, and LLM-evaluation literature.
+- [`study/preregistration.md`](study/preregistration.md) — conditions, sample size, exclusion rules, analysis plan.
+- [`study/pilot_log.md`](study/pilot_log.md) — participant tracker.
+
+### Evaluation outputs
+
+- **Classifier** — [`evaluation/classifier_results.json`](evaluation/classifier_results.json), [`evaluation/confusion_matrix.png`](evaluation/confusion_matrix.png).
+  Generate: `python -m src.evaluate_classifier`.
+  TF-IDF classifier: **60.3% top-1**, **81.7% top-3**, **macro-F1 0.528** on held-out CUAD, vs. 23.8% / 0.012 (most-frequent) and 28.2% / 0.177 (keyword) baselines.
+- **Explainer** — [`evaluation/explainer_benchmark.jsonl`](evaluation/explainer_benchmark.jsonl), [`evaluation/explainer_results.md`](evaluation/explainer_results.md), [`evaluation/human_ratings.csv`](evaluation/human_ratings.csv).
+  Generate: `python -m src.evaluate_explainer all --models tinyllama,anthropic`.
+  Frontier-API adapters (`anthropic`, `openai`) read `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` and are skipped if unset.
+- **Pilot results** (after collection) — `evaluation/pilot_results.md`.
+  Dashboard: `streamlit run app.py` → Results Dashboard (set `DASHBOARD_PASSWORD` in env or `.streamlit/secrets.toml`).
+
 ## Authors
 
 Ganesh Saranga, Satvik Movva, and Numair Hajyani — CS 568, Spring 2026.

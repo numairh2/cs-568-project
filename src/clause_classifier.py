@@ -61,21 +61,31 @@ class ClauseClassifier:
 
         self._fitted = True
 
-    def classify(self, clause_text, top_k=3):
+    # Threshold 0.10 chosen via 5-fold CV on the CUAD train split
+    # (macro-F1 = 0.5405 vs 0.5280 at threshold=0; see
+    # evaluation/classifier_results.json). Above ~0.15 performance
+    # collapses as correct but short clauses get filtered out.
+    DEFAULT_THRESHOLD = 0.10
+
+    def classify(self, clause_text, top_k=3, threshold=None):
         """Classify a clause into CUAD types.
 
         Returns list of (clause_type, similarity_score, risk_level) tuples,
         sorted by similarity descending. Returns top_k matches.
+
+        Pass ``threshold=0`` to force a prediction (used by evaluation).
         """
         if not self._fitted:
             return []
+        if threshold is None:
+            threshold = self.DEFAULT_THRESHOLD
 
         query_vec = self._tfidf(clause_text)
         scores = []
 
         for ctype, centroid in self.type_centroids.items():
             sim = self._cosine_similarity(query_vec, centroid)
-            if sim > 0.01:  # minimum threshold
+            if sim > threshold:
                 scores.append((ctype, sim, get_clause_risk(ctype)))
 
         scores.sort(key=lambda x: x[1], reverse=True)

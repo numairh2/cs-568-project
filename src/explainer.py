@@ -145,7 +145,14 @@ A user is reading a contract and needs help understanding the following clause{c
             return {"level": "high", "reason": "All sections successfully generated"}
 
     def _parse_response(self, raw_text, detail_level="standard"):
-        """Parse the LLM output into structured sections."""
+        """Parse the LLM output into structured sections.
+
+        Finds each section's header marker in the text, then extracts the
+        content between that marker and the next-found marker. Content on
+        the same line as the header (after an optional colon) is kept —
+        small models often write "Summary: X" on a single line, and the
+        previous version of this parser dropped that content.
+        """
         sections = {
             "summary": "",
             "rights": "",
@@ -162,38 +169,67 @@ A user is reading a contract and needs help understanding the following clause{c
             sections["summary"] = text
             return sections
 
-        # Section markers to search for
+        # Marker → (match_length_to_skip_past) pairs. We store both the
+        # marker and the length so we can resume content right after it.
         marker_map = {
-            "summary": ["plain-language summary", "plain language summary", "1."],
-            "rights": ["rights & obligations", "rights and obligations", "2."],
-            "analogy": ["real-world analogy", "real world analogy", "3."],
-            "terms": ["key legal terms", "legal terms", "4."],
-            "risk": ["risk assessment", "risk level", "5."],
+            "summary": ["plain-language summary", "plain language summary", "summary"],
+            "rights": ["rights & obligations", "rights and obligations", "rights", "obligations"],
+            "analogy": ["real-world analogy", "real world analogy", "analogy"],
+            "terms": ["key legal terms", "legal terms", "key terms"],
+            "risk": ["risk assessment", "risk level", "risk"],
+        }
+        numeric_fallback = {
+            "summary": ["1.", "1)"],
+            "rights": ["2.", "2)"],
+            "analogy": ["3.", "3)"],
+            "terms": ["4.", "4)"],
+            "risk": ["5.", "5)"],
         }
 
-        def find_section(markers):
+        def find_marker(markers):
+            best_idx = -1
+            best_marker = ""
             for marker in markers:
                 idx = lower.find(marker)
-                if idx != -1:
-                    return idx
-            return -1
+                if idx == -1:
+                    continue
+                if best_idx == -1 or idx < best_idx:
+                    best_idx = idx
+                    best_marker = marker
+            return best_idx, best_marker
 
-        found = []
+        found: list[tuple[int, str, str]] = []
         for key, markers in marker_map.items():
-            idx = find_section(markers)
+            idx, marker = find_marker(markers)
+            if idx < 0:
+                idx, marker = find_marker(numeric_fallback[key])
             if idx >= 0:
-                found.append((idx, key))
+                found.append((idx, key, marker))
 
-        found.sort(key=lambda x: x[0])
+        # Deduplicate: if two keys landed on the same idx (rare), keep the first.
+        found = sorted(found, key=lambda x: x[0])
+        seen_positions: set[int] = set()
+        dedup: list[tuple[int, str, str]] = []
+        for idx, key, marker in found:
+            if idx in seen_positions:
+                continue
+            seen_positions.add(idx)
+            dedup.append((idx, key, marker))
+        found = dedup
 
-        for i, (idx, key) in enumerate(found):
-            content_start = text.find("\n", idx)
-            if content_start < 0:
-                content_start = idx
-            if i + 1 < len(found):
-                content_end = found[i + 1][0]
-            else:
-                content_end = len(text)
-            sections[key] = text[content_start:content_end].strip()
+        for i, (idx, key, marker) in enumerate(found):
+            # Skip past the header itself plus optional ":" / "**" / whitespace.
+            start = idx + len(marker)
+            while start < len(text) and text[start] in ":*-–— \t":
+                start += 1
+            end = found[i + 1][0] if i + 1 < len(found) else len(text)
+            sections[key] = text[start:end].strip()
+
+        # If nothing parsed, fall back to the raw text as summary so the UI
+        # still has something to display instead of a silent blank.
+        if detail_level != "brief" and not any(
+            sections[k] for k in ("summary", "rights", "analogy")
+        ):
+            sections["summary"] = text
 
         return sections

@@ -8,3 +8,5 @@ models/
 dist/
 build/
 .streamlit/secrets.toml
+RELATED_WORK.md
+RESEARCH.md

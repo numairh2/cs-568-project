@@ -1,6 +1,18 @@
-"""Load and process the CUAD dataset for clause extraction."""
+"""Load and process the CUAD dataset for clause extraction.
 
-from datasets import load_dataset
+We fetch CUAD's ``data.zip`` from the Atticus Project GitHub release and
+parse the SQuAD-format JSON ourselves. We used to go through HuggingFace
+``datasets``, but ``datasets`` >= 3.0 dropped support for script-based
+datasets (and CUAD is distributed as a loader script), so direct fetch
+is the portable option.
+"""
+
+import io
+import json
+import os
+import urllib.request
+import zipfile
+from pathlib import Path
 
 # The 41 CUAD clause types
 CLAUSE_TYPES = [
@@ -64,16 +76,73 @@ def get_clause_risk(clause_type):
     return "low"
 
 
+CUAD_URL = "https://github.com/TheAtticusProject/cuad/raw/main/data.zip"
+CUAD_CACHE_DIR = Path(__file__).parent.parent / "data" / "cuad"
+
+
+def _download_cuad(cache_dir: Path = CUAD_CACHE_DIR) -> Path:
+    """Download and extract CUAD's data.zip into ``cache_dir`` (idempotent)."""
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    train_path = cache_dir / "train_separate_questions.json"
+    test_path = cache_dir / "test.json"
+    if train_path.exists() and test_path.exists():
+        return cache_dir
+
+    with urllib.request.urlopen(CUAD_URL) as resp:
+        raw = resp.read()
+    with zipfile.ZipFile(io.BytesIO(raw)) as zf:
+        for member in zf.namelist():
+            if member.endswith("/") or os.path.isabs(member) or ".." in member:
+                continue
+            name = os.path.basename(member)
+            if name in {"train_separate_questions.json", "test.json", "CUAD_v1.json"}:
+                with zf.open(member) as src, open(cache_dir / name, "wb") as dst:
+                    dst.write(src.read())
+    return cache_dir
+
+
+def _squad_to_entries(squad_json: dict) -> list[dict]:
+    """Flatten SQuAD-format CUAD into the per-QA entry shape the rest of this
+    module expects (matching the old HF ``cuad-qa`` loader output).
+    """
+    entries = []
+    for example in squad_json.get("data", []):
+        title = (example.get("title") or "").strip()
+        for paragraph in example.get("paragraphs", []):
+            context = (paragraph.get("context") or "").strip()
+            for qa in paragraph.get("qas", []):
+                answers = qa.get("answers", []) or []
+                entries.append({
+                    "id": qa.get("id"),
+                    "title": title,
+                    "context": context,
+                    "question": (qa.get("question") or "").strip(),
+                    "answers": {
+                        "text": [(a.get("text") or "").strip() for a in answers],
+                        "answer_start": [a.get("answer_start", 0) for a in answers],
+                    },
+                })
+    return entries
+
+
 def load_cuad():
-    """Load the CUAD dataset from HuggingFace."""
-    dataset = load_dataset("theatticusproject/cuad-qa", trust_remote_code=True)
-    return dataset
+    """Load the CUAD dataset. Returns a dict with ``train`` and ``test`` keys,
+    each a list of per-QA entries (same shape as the old HF output)."""
+    cache_dir = _download_cuad()
+    splits = {}
+    for split, fname in (("train", "train_separate_questions.json"), ("test", "test.json")):
+        path = cache_dir / fname
+        if path.exists():
+            with open(path, encoding="utf-8") as f:
+                splits[split] = _squad_to_entries(json.load(f))
+    return splits
 
 
 def extract_clauses_from_cuad(dataset_split):
-    """Extract clause annotations grouped by contract from the CUAD-QA dataset.
+    """Extract clause annotations grouped by contract from CUAD.
 
-    The CUAD-QA format has entries with:
+    ``dataset_split`` is a list of per-QA entries (as returned by
+    ``load_cuad()[split]``), each with:
       - context: the contract text
       - question: a question encoding the clause type
       - answers: {"text": [...], "answer_start": [...]}
