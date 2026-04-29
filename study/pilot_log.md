@@ -14,7 +14,7 @@ by **2026-05-05**.
 
 | # | date | participant_id | condition | completed? | attention pass? | manip ≥ 50%? | notes |
 |---|------|----------------|-----------|------------|-----------------|--------------|-------|
-| 1 | 4/29 |    23ae92e8    |treatment_basic| True   |     True         |   True   |       |
+| 1 | 4/29 |    23ae92e8    |treatment_basic| True   |     True         |   True   |    17/24   |
 | 2 |      |                |           |            |                 |              |       |
 | 3 |      |                |           |            |                 |              |       |
 | 4 |      |                |           |            |                 |              |       |
