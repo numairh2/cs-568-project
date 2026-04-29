@@ -19,7 +19,7 @@ by **2026-05-05**.
 | 3 |  4/29  |    320a37e3    |  control |   True      |   True         |  N/A     |  22/24 |
 | 4 |  4/29    |    9ed137e9       |  control  |     False       |       False          |     N/A         |  15/24     |
 | 5 |  4/29  | 8624eb10   |   control   |   True         |     False            |     N/A         |   16/24    |
-| 6 |      |                |           |            |                 |              |       |
+| 6 |  4/29    |   228e5c8b     | treatment_full  |  True   |     True      |   True    |  20/24     |
 | 7 |      |                |           |            |                 |              |       |
 | 8 |      |                |           |            |                 |              |       |
 | 9 |      |                |           |            |                 |              |       |
