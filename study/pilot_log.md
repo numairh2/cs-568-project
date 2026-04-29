@@ -16,8 +16,8 @@ by **2026-05-05**.
 |---|------|----------------|-----------|------------|-----------------|--------------|-------|
 | 1 | 4/29 |    23ae92e8    |treatment_basic| True   |     True         |   True   |    17/24   |
 | 2 | 4/29 |   b785f8a2     | treatment_full|     True       |   True              |   True           |  22/24     |
-| 3 |  4/29  |    320a37e3    |  treatment_control |   True      |   True         |  True     |  22/24 |
-| 4 |  4/29    |    9ed137e9       |  treatment_control  |     False       |       False          |      15/24        |       |
+| 3 |  4/29  |    320a37e3    |  treatment_control |   True      |   True         |  N/A     |  22/24 |
+| 4 |  4/29    |    9ed137e9       |  treatment_control  |     False       |       False          |     N/A         |  15/24     |
 | 5 |      |                |           |            |                 |              |       |
 | 6 |      |                |           |            |                 |              |       |
 | 7 |      |                |           |            |                 |              |       |
