@@ -21,8 +21,8 @@ by **2026-05-05**.
 | 5 |  4/29  | 8624eb10   |   control   |   True         |     False            |     N/A         |   16/24    |
 | 6 |  4/29    |   228e5c8b     | treatment_full  |  True   |     True      |   True    |  20/24     |
 | 7 |  4/29    |  63bc9a07    |  treatment_basic  |  True     |   True      |   True      | 14/24 |
-| 8 |      |                |           |            |                 |              |       |
-| 9 |      |                |           |            |                 |              |       |
+| 8 |4/29|   7e53ab2b    |treatment_full|True|True|True|18/24|
+| 9 |4/29|   e0970909     |treatment_basic|True|True|True|20/24|
 
 ## Running a session
 
