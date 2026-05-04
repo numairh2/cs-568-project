@@ -16,7 +16,7 @@ by **2026-05-05**.
 |---|------|----------------|-----------|------------|-----------------|--------------|-------|
 | 1 | 4/29 |    23ae92e8    |treatment_basic| True   |     True         |   True   |    17/24   |
 | 2 | 4/29 |   b785f8a2     | treatment_full|     True       |   True              |   True           |  22/24     |
-| 3 |  4/29  |    320a37e3    |  control |   True      |   Fals         |  N/A     |  12/24 |
+| 3 |  4/29  |    320a37e3    |  control |   True      |   False         |  N/A     |  12/24 |
 | 4 |  4/29    |    9ed137e9       |  control  |     True       |       True          |     N/A         |  15/24     |
 | 5 |  4/29  | 8624eb10   |   control   |   True         |     False            |     N/A         |   16/24    |
 | 6 |  4/29    |   228e5c8b     | treatment_full  |  True   |     True      |   True    |  20/24     |
